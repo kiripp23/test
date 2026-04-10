@@ -1,0 +1,11 @@
+[project]
+name = "medtech"
+version = "0.2.4"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["ai_agent*"]

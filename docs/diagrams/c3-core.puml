@@ -1,0 +1,60 @@
+@startuml C3 - Core Components
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam rectangle {
+    RoundCorner 10
+}
+
+title C3 — Core Module Components
+
+rectangle "Asterisk ARI\n<size:10>:8088 WebSocket + REST</size>" as asterisk #LightCoral
+
+package "core/" as core #LightGreen {
+
+    rectangle "ARIClient\n<size:10>ari_client.py</size>" as ariclient {
+        rectangle "connect() — WebSocket" as ws
+        rectangle "REST: answer, hangup,\ncreate_bridge, add_to_bridge,\ncreate_external_media" as rest
+    }
+
+    rectangle "MedBot\n<size:10>run.py</size>" as medbot {
+        rectangle "_on_stasis_start()" as start
+        rectangle "_on_stasis_end()" as end
+        rectangle "_allocate_port()\n<size:10>round-robin 30000-30100</size>" as port
+    }
+
+    rectangle "CallHandler\n<size:10>call_handler.py</size>" as handler {
+        rectangle "_setup()\n<size:10>answer → ext_media → bridge</size>" as setup
+        rectangle "_greeting()\n<size:10>wait RTP → LLM → TTS</size>" as greeting
+        rectangle "_conversation_loop()\n<size:10>listen → STT → LLM → TTS</size>" as loop
+        rectangle "_listen_for_speech()\n<size:10>VAD: energy > 50, silence 0.8s</size>" as vad
+        rectangle "_speak()\n<size:10>TTS → send_audio</size>" as speak
+        rectangle "_cleanup()\n<size:10>close all resources</size>" as cleanup
+    }
+
+    rectangle "AudioBridge\n<size:10>audio_bridge.py</size>" as audio {
+        rectangle "start() — bind UDP" as bind
+        rectangle "receive_audio() — RTP → ulaw" as recv
+        rectangle "send_audio() — ulaw → RTP 20ms" as send
+    }
+
+    rectangle "RTP Layer\n<size:10>rtp.py</size>" as rtp {
+        rectangle "RTPPacket\n<size:10>parse() / build()</size>" as packet
+        rectangle "RTPSender\n<size:10>seq++ / ts += 160</size>" as sender
+    }
+}
+
+asterisk <--> ariclient : WebSocket\n+ REST
+ariclient --> medbot : callbacks
+medbot --> handler : создаёт\nпо звонку
+handler --> audio : приём/отправка\nаудио
+audio --> rtp : parse/build\nRTP пакетов
+
+setup -[hidden]down-> greeting
+greeting -[hidden]down-> loop
+loop -[hidden]down-> vad
+vad -[hidden]down-> speak
+speak -[hidden]down-> cleanup
+
+@enduml

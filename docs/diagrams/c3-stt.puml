@@ -1,0 +1,43 @@
+@startuml C3 - STT Pipeline
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam rectangle {
+    RoundCorner 10
+}
+
+title C3 — STT Module: Распознавание речи
+
+rectangle "CallHandler\n<size:10>speech_audio (ulaw bytes)</size>" as handler #LightGreen
+
+package "stt/deepgram_stt.py" as stt #LightYellow {
+
+    rectangle "1. Валидация\n<size:10>len >= 1600 байт (~200ms)</size>" as validate
+    rectangle "2. ulaw → PCM\n<size:10>audioop.ulaw2lin(data, 2)</size>" as ulaw2pcm
+    rectangle "3. PCM → WAV\n<size:10>wave module: 8kHz mono 16-bit</size>" as pcm2wav
+    rectangle "4. HTTP POST\n<size:10>multipart/form-data</size>" as post {
+        rectangle "file: audio.wav" as file
+        rectangle "model: whisper-large-v3" as model
+        rectangle "language: ru" as lang
+    }
+    rectangle "5. Parse JSON\n<size:10>response.text</size>" as parse
+}
+
+rectangle "Groq Whisper API\n<size:10>api.groq.com/openai/v1/\naudio/transcriptions</size>" as groq #Technology
+
+handler -down-> validate
+validate -down-> ulaw2pcm
+ulaw2pcm -down-> pcm2wav
+pcm2wav -down-> post
+post -right-> groq : HTTPS
+groq -left-> parse : JSON
+parse -up-> handler : text: str
+
+note right of groq
+  Бесплатно
+  ~0.3с задержка
+  Отличный русский
+end note
+
+@enduml

@@ -1,0 +1,33 @@
+# Полный тест TG + агент: docker compose up -d --build ai-agent-api tg-test-bot
+# Только API: docker compose up -d --build ai-agent-api
+# Голос (ARI на хосте): docker compose --profile voice up -d --build medbot
+
+services:
+  ai-agent-api:
+    build: .
+    image: psyfamily-voicebot:local
+    command: uvicorn ai_agent.app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - ./ai_agent/data/bookings.json:/app/ai_agent/data/bookings.json
+    restart: unless-stopped
+
+  tg-test-bot:
+    image: psyfamily-voicebot:local
+    depends_on:
+      - ai-agent-api
+    command: python -m ai_agent.tg_test_bot
+    env_file: .env
+    environment:
+      AI_AGENT_API_URL: http://ai-agent-api:8000
+    restart: unless-stopped
+
+  medbot:
+    image: psyfamily-voicebot:local
+    profiles: ["voice"]
+    command: python run.py
+    network_mode: host
+    env_file: .env
+    restart: unless-stopped

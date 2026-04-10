@@ -1,0 +1,21 @@
+{
+  "name": "psy-family-eval",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "eval": "npx ts-node run.ts",
+    "eval:s1": "npx ts-node run.ts --scenario S1",
+    "eval:s2": "npx ts-node run.ts --scenario S2",
+    "eval:s3": "npx ts-node run.ts --scenario S3",
+    "eval:s4": "npx ts-node run.ts --scenario S4",
+    "eval:s5": "npx ts-node run.ts --scenario S5",
+    "eval:s6": "npx ts-node run.ts --scenario S6",
+    "eval:critical": "npx ts-node run.ts --critical-only"
+  },
+  "dependencies": {
+    "@types/node": "^20.0.0",
+    "socks-proxy-agent": "^10.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.4.0"
+  }
+}

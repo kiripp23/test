@@ -1,0 +1,47 @@
+@startuml C3 - TTS Pipeline
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam rectangle {
+    RoundCorner 10
+}
+
+title C3 — TTS Module: Синтез речи
+
+rectangle "CallHandler._speak(text)" as handler #LightGreen
+
+package "tts/elevenlabs_tts.py" as tts #LightYellow {
+
+    rectangle "1. HTTP POST (streaming)\n<size:10>/v1/text-to-speech/{voice_id}/stream</size>" as post {
+        rectangle "model_id: eleven_v3" as model
+        rectangle "language_code: ru" as lang
+        rectangle "apply_text_normalization: on" as norm
+        rectangle "stability: 0.0 (creative)" as stab
+        rectangle "similarity_boost: 0.8" as sim
+    }
+    rectangle "2. Сбор MP3 чанков\n<size:10>async for chunk in resp</size>" as collect
+    rectangle "3. MP3 → AudioSegment\n<size:10>pydub (ffmpeg)</size>" as decode
+    rectangle "4. Resample\n<size:10>44.1kHz → 8kHz mono</size>" as resample
+    rectangle "5. PCM → ulaw\n<size:10>audioop.lin2ulaw(pcm, 2)</size>" as convert
+}
+
+rectangle "ElevenLabs API\n<size:10>api.elevenlabs.io</size>" as elevenlabs #Technology
+rectangle "AudioBridge.send_audio()\n<size:10>ulaw → RTP 20ms фреймы</size>" as audio #LightCoral
+
+handler -down-> post
+post -right-> elevenlabs : HTTPS streaming
+elevenlabs -left-> collect : MP3 chunks
+collect -down-> decode
+decode -down-> resample
+resample -down-> convert
+convert -down-> audio : ulaw bytes
+
+note right of elevenlabs
+  eleven_v3
+  Creative mode
+  Русская интонация
+  Text normalization
+end note
+
+@enduml

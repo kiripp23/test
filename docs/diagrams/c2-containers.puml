@@ -1,0 +1,62 @@
+@startuml C2 - Containers
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam rectangle {
+    RoundCorner 10
+}
+
+title C2 — Container Diagram: VPS 146.0.76.83
+
+actor "Пациент" as patient #LightBlue
+rectangle "Mango Office\n<size:10>SIP-провайдер</size>" as mango #Technology
+
+package "VPS (146.0.76.83)" as vps {
+
+    package "Asterisk PBX" as asterisk #LightCoral {
+        rectangle "PJSIP Engine\n<size:10>SIP over TCP :5060</size>" as pjsip
+        rectangle "Dialplan\n<size:10>[from-mango] → Stasis(medbot)</size>" as dialplan
+        rectangle "ARI Module\n<size:10>HTTP + WebSocket :8088</size>" as ari
+        rectangle "ExternalMedia\n<size:10>RTP/UDP :30000-30100</size>" as extmedia
+        rectangle "Bridge\n<size:10>(mixing)</size>" as bridge
+    }
+
+    package "MedBot (Python)" as medbot #LightGreen {
+        rectangle "ARI Client\n<size:10>WebSocket + REST</size>" as ariclient
+        rectangle "Call Handler\n<size:10>Жизненный цикл звонка</size>" as handler
+        rectangle "Audio Bridge\n<size:10>UDP/RTP сокет</size>" as audiobridge
+        rectangle "STT Client\n<size:10>Groq Whisper</size>" as sttclient
+        rectangle "LLM Client\n<size:10>OpenRouter</size>" as llmclient
+        rectangle "TTS Client\n<size:10>ElevenLabs</size>" as ttsclient
+        rectangle "Medesk Client\n<size:10>CRM интеграция</size>" as medeskclient
+    }
+}
+
+rectangle "Groq" as groq #Technology
+rectangle "OpenRouter" as openrouter #Technology
+rectangle "ElevenLabs" as elevenlabs #Technology
+rectangle "Medesk" as medesk #Technology
+
+patient -down-> mango : SIP/RTP
+mango -down-> pjsip : SIP over TCP
+pjsip -down-> dialplan
+dialplan -down-> ari
+ari <-right-> ariclient : WebSocket\n+ REST :8088
+extmedia <-right-> audiobridge : RTP/UDP\n:30000-30100
+pjsip -down-> bridge
+extmedia -down-> bridge
+
+ariclient -down-> handler
+handler -down-> audiobridge
+handler -right-> sttclient
+handler -right-> llmclient
+handler -right-> ttsclient
+llmclient -down-> medeskclient
+
+sttclient -down-> groq : HTTPS
+llmclient -down-> openrouter : HTTPS
+ttsclient -down-> elevenlabs : HTTPS
+medeskclient -down-> medesk : HTTPS
+
+@enduml

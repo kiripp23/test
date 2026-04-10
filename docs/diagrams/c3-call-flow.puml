@@ -1,0 +1,68 @@
+@startuml C3 - Call Flow Sequence
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam sequenceMessageAlign center
+
+title Последовательность обработки звонка
+
+participant "Пациент" as patient #LightBlue
+participant "Mango" as mango #Technology
+participant "Asterisk" as asterisk #LightCoral
+participant "MedBot" as bot #LightGreen
+participant "Groq\nWhisper" as stt #Technology
+participant "OpenRouter\nGemini" as llm #Technology
+participant "ElevenLabs" as tts #Technology
+
+== Входящий звонок ==
+
+patient -> mango : Звонок на +7(904)953-24-10
+mango -> asterisk : SIP INVITE (TCP)
+asterisk -> bot : StasisStart (WebSocket)
+bot -> asterisk : answer_channel (REST)
+bot -> asterisk : create_external_media
+bot -> asterisk : create_bridge + add channels
+
+== Приветствие ==
+
+bot -> llm : "Поприветствуй пациента"
+llm --> bot : "Здравствуйте! Клиника Здоровье, Алиса."
+bot -> tts : текст приветствия
+tts --> bot : MP3 → ulaw
+bot -> asterisk : RTP (ulaw 20ms фреймы)
+asterisk -> mango : RTP
+mango -> patient : Голос
+
+== Цикл разговора ==
+
+patient -> mango : Голос
+mango -> asterisk : RTP
+asterisk -> bot : RTP (ulaw)
+note over bot : Silence detection\nenergy > 50\nsilence 0.8s
+bot -> stt : WAV (ulaw→PCM→WAV)
+note right of stt : ~0.3с
+stt --> bot : "Хочу к хирургу"
+bot -> llm : текст + tools
+note right of llm : ~0.5с
+llm --> bot : tool_call: check_schedule
+note over bot : execute tool\n→ mock slots
+bot -> llm : tool result
+llm --> bot : "Есть окошко на 10 утра..."
+bot -> tts : текст ответа
+note right of tts : ~1с
+tts --> bot : MP3 → ulaw
+bot -> asterisk : RTP
+asterisk -> patient : Голос
+
+== Завершение ==
+
+patient -> bot : "Спасибо, до свидания"
+bot -> llm : текст
+llm --> bot : "До свидания!" + end_call()
+bot -> tts : прощание
+tts --> bot : ulaw
+bot -> asterisk : RTP + hangup
+asterisk -> mango : BYE
+
+@enduml

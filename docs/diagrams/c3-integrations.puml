@@ -1,0 +1,51 @@
+@startuml C3 - Integrations
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam rectangle {
+    RoundCorner 10
+}
+
+title C3 — Integrations Module: Medesk CRM
+
+rectangle "Conversation._execute_tool()" as conv #LightYellow
+
+package "integrations/medesk.py" as integrations #LightGreen {
+
+    rectangle "MedeskClient\n<size:10>Статус: STUB (mock-данные)</size>" as client
+
+    rectangle "get_available_slots()\n<size:10>doctor_name, date?</size>" as slots {
+        rectangle "Mock: 4 слота\n<size:10>10:00, 11:30, 14:00, 16:30</size>" as mock1
+    }
+
+    rectangle "book_appointment()\n<size:10>doctor, date, time, patient, dob</size>" as book {
+        rectangle "Mock: booked\n<size:10>cost: 3000 руб.</size>" as mock2
+    }
+
+    rectangle "get_doctor_info()\n<size:10>doctor_name</size>" as doctor {
+        rectangle "Mock: specialty,\n<size:10>experience, schedule</size>" as mock3
+    }
+
+    rectangle "get_clinic_info()\n<size:10>topic</size>" as clinic {
+        rectangle "Mock: address,\n<size:10>hours, services</size>" as mock4
+    }
+}
+
+rectangle "Medesk API v2\n<size:10>api.medesk.md/api/v2</size>\n<size:10>(будущая интеграция)</size>" as medesk #Technology
+
+rectangle "Специальные tool calls\n<size:10>(без CRM)</size>" as special #LightCoral {
+    rectangle "transfer_to_operator\n<size:10>→ перевод звонка</size>" as transfer
+    rectangle "end_call\n<size:10>→ ended = True</size>" as endcall
+}
+
+conv -down-> client
+conv -down-> special
+client -down-> slots
+client -down-> book
+client -down-> doctor
+client -down-> clinic
+
+client ..right..> medesk : <size:10>TODO: реальный API</size>
+
+@enduml

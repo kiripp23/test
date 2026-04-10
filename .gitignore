@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment variables (secrets!)
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+/logs/
+
+# Audio test files
+*.ulaw
+*.wav
+*.mp3
+
+# AI tools
+.claude/
+
+# LangGraph Studio
+.langgraph-cache/
+.langgraph/
+.langgraph_api/
+
+# pytest
+.pytest_cache/
+
+# setuptools (pip install -e .)
+*.egg-info/
+medtech.egg-info/
+
+# Node.js (eval framework)
+node_modules/
+eval/node_modules/
+eval/dist/
+
+# Eval reports (generated)
+eval/results/
+qa_report_*.txt

@@ -1,0 +1,52 @@
+@startuml C3 - LLM Components
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam rectangle {
+    RoundCorner 10
+}
+
+title C3 — LLM Module: Диалог и Tool Calling
+
+rectangle "CallHandler" as handler #LightGreen
+
+package "llm/" as llm #LightYellow {
+
+    rectangle "Conversation\n<size:10>conversation.py</size>" as conv {
+        rectangle "messages[]\n<size:10>system → user → assistant → tool</size>" as messages
+        rectangle "get_greeting()" as greet
+        rectangle "process_input(text)" as process
+        rectangle "_call_llm()\n<size:10>POST /chat/completions</size>" as call
+        rectangle "_execute_tool(name, args)\n<size:10>маршрутизация tool calls</size>" as exec
+    }
+
+    rectangle "SYSTEM_PROMPT\n<size:10>prompts.py</size>" as prompt {
+        rectangle "Персона: Алиса\n<size:10>администратор клиники</size>" as persona
+        rectangle "Стиль: разговорный\n<size:10>1-2 предложения, без списков</size>" as style
+    }
+
+    rectangle "TOOLS_OPENAI\n<size:10>tools.py — 6 функций</size>" as tools {
+        rectangle "check_schedule" as t1
+        rectangle "book_appointment" as t2
+        rectangle "get_doctor_info" as t3
+        rectangle "get_clinic_info" as t4
+        rectangle "transfer_to_operator" as t5
+        rectangle "end_call" as t6
+    }
+}
+
+rectangle "OpenRouter API\n<size:10>Gemini 2.0 Flash</size>" as openrouter #Technology
+rectangle "MedeskClient\n<size:10>integrations/medesk.py</size>" as medesk #LightCoral
+
+handler -down-> conv : text / response
+conv -right-> prompt : system prompt
+conv -right-> tools : tool definitions
+call -down-> openrouter : HTTPS POST
+exec -down-> medesk : tool calls\n(schedule, book, info)
+
+greet -[hidden]down-> process
+process -[hidden]down-> call
+call -[hidden]down-> exec
+
+@enduml

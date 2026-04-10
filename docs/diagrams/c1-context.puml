@@ -1,0 +1,34 @@
+@startuml C1 - System Context
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontName "Segoe UI"
+skinparam rectangle {
+    RoundCorner 10
+}
+
+title C1 — System Context: MedTech Voice Bot
+
+actor "Пациент\n(звонит по телефону)" as patient #LightBlue
+actor "Оператор клиники\n(эскалация)" as operator #LightGreen
+
+rectangle "Mango Office\n<size:10>SIP-провайдер</size>\n<size:10>Виртуальная АТС</size>" as mango #Technology
+
+package "MedTech Voice Bot" as medbot #LightYellow {
+    rectangle "Голосовой ИИ-ассистент\nмедицинской клиники" as bot
+}
+
+rectangle "Groq Whisper\n<size:10>STT — распознавание речи</size>" as stt #Technology
+rectangle "OpenRouter\n<size:10>LLM — Gemini Flash</size>" as llm #Technology
+rectangle "ElevenLabs\n<size:10>TTS — синтез речи</size>" as tts #Technology
+rectangle "Medesk CRM\n<size:10>Расписание, запись</size>" as crm #Technology
+
+patient -down-> mango : SIP/RTP\n(голос)
+mango -down-> bot : SIP over TCP\nRTP over UDP
+bot -down-> stt : HTTPS\n(аудио → текст)
+bot -down-> llm : HTTPS\n(текст → ответ)
+bot -down-> tts : HTTPS\n(текст → аудио)
+bot -down-> crm : HTTPS\n(расписание, запись)
+bot .right.> operator : перевод звонка\n(при эскалации)
+
+@enduml
